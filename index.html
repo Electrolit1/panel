@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Panel Minecraft - Frontend</title>
+</head>
+<body>
+  <h1>🎮 Panel de Minecraft (Frontend)</h1>
+  <button onclick="iniciarServidor()">Iniciar Servidor</button>
+  <pre id="logs" style="background:#111; color:#0f0; padding:10px; height: 400px; overflow-y: scroll;"></pre>
+
+  <script>
+    function iniciarServidor() {
+      fetch('http://localhost:3000/')
+        .then(response => response.text())
+        .then(data => alert(data))
+        .catch(err => alert('Error al iniciar: ' + err));
+    }
+
+    const logBox = document.getElementById('logs');
+
+    if (!!window.EventSource) {
+      const eventSource = new EventSource('http://TU_IP_O_DOMINIO:3000/logs');
+      eventSource.onmessage = function(event) {
+        logBox.textContent += event.data + '\n';
+        logBox.scrollTop = logBox.scrollHeight;
+      };
+    } else {
+      alert('Tu navegador no soporta EventSource');
+    }
+  </script>
+</body>
+</html>
