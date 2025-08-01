@@ -1,0 +1,390 @@
+<!DOCTYPE html> 
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>FearMC Panel</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #0f1117;
+      color: #e0e0e0;
+      margin: 0;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    aside {
+      width: 220px;
+      background: #1f2937;
+      display: flex;
+      flex-direction: column;
+      padding: 20px 10px;
+      gap: 10px;
+      box-shadow: 2px 0 4px rgba(0,0,0,0.2);
+    }
+
+    aside h2 {
+      color: #60a5fa;
+      margin: 0 0 15px;
+      font-size: 18px;
+      text-align: center;
+    }
+
+    .nav-btn {
+      background: none;
+      border: none;
+      color: #ccc;
+      padding: 12px 16px;
+      text-align: left;
+      width: 100%;
+      font-size: 15px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .nav-btn:hover {
+      background: #374151;
+      color: #fff;
+    }
+
+    .nav-btn.active {
+      background: #2563eb;
+      color: white;
+    }
+
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    header {
+      background: #111827;
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 20px;
+      color: #60a5fa;
+    }
+
+    #console, #explorer-container {
+      flex: 1;
+      overflow: auto;
+      padding: 15px;
+      display: none;
+    }
+
+    #console {
+      background: #000;
+      font-family: monospace;
+      white-space: pre-wrap;
+      height: 100%;
+    }
+
+    #explorer-container {
+      background: #0f172a;
+    }
+
+    #file-explorer div {
+      padding: 5px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-bottom: 4px;
+    }
+
+    .folder { color: #38bdf8; font-weight: bold; }
+    .file { color: #eee; }
+    #file-explorer div:hover { background-color: #1e293b; }
+
+    #file-content {
+      width: 100%;
+      height: 150px;
+      margin-top: 10px;
+      background: #1e293b;
+      color: #e0e0e0;
+      border: 1px solid #334155;
+      padding: 10px;
+      border-radius: 6px;
+      font-family: monospace;
+      resize: vertical;
+    }
+
+    button {
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-size: 15px;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background: #1d4ed8;
+    }
+
+    #upload-area {
+      border: 2px dashed #3b82f6;
+      padding: 15px;
+      margin-top: 20px;
+      text-align: center;
+      background: #0f172a;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    #console-controls {
+      margin-top: 10px;
+      display: flex;
+      gap: 10px;
+      padding: 0 15px;
+    }
+
+    /* NUEVO: zona para input de comandos */
+    #command-input-container {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+      padding: 0 15px;
+    }
+    #command-input {
+      flex: 1;
+      padding: 8px;
+      border-radius: 6px;
+      border: none;
+      font-family: monospace;
+      font-size: 14px;
+      background: #111827;
+      color: #e0e0e0;
+    }
+    #command-input:focus {
+      outline: 2px solid #2563eb;
+      background: #1e293b;
+    }
+    #send-command-btn {
+      padding: 8px 16px;
+      border-radius: 6px;
+      border: none;
+      background: #2563eb;
+      color: #fff;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    #send-command-btn:hover {
+      background: #1d4ed8;
+    }
+
+    footer {
+      background: #1f2937;
+      text-align: center;
+      color: #888;
+      font-size: 12px;
+      padding: 8px;
+    }
+  </style>
+</head>
+<body>
+  <aside>
+    <h2>FearMC Panel</h2>
+    <button class="nav-btn" onclick="showSection('console')">🖥 Consola</button>
+    <button class="nav-btn" onclick="showSection('explorer')">📁 Archivos</button>
+  </aside>
+
+  <main>
+    <header>
+      <h1>FearMC Panel Web</h1>
+    </header>
+
+    <div id="console"></div>
+
+    <div id="console-controls">
+      <button onclick="enviarAccion('iniciar')">▶ Encender</button>
+      <button style="background:#dc2626" onclick="enviarAccion('kill')">💀 Kill</button>
+    </div>
+
+    <!-- Zona para input de comandos -->
+    <div id="command-input-container">
+      <input id="command-input" type="text" placeholder="Escribe un comando..." autocomplete="off" />
+      <button id="send-command-btn">Enviar</button>
+    </div>
+
+    <div id="explorer-container">
+      <div id="file-explorer"></div>
+      <textarea id="file-content" placeholder="Selecciona un archivo..."></textarea>
+      <button onclick="guardarArchivo()">💾 Guardar</button>
+
+      <div id="upload-area" onclick="document.getElementById('pluginInput').click()">
+        Arrastra o haz clic para subir plugin .jar
+        <input id="pluginInput" type="file" accept=".jar" style="display:none;" />
+      </div>
+    </div>
+
+    <footer>FearMC Panel &copy; 2025 - No</footer>
+  </main>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const consola = document.getElementById('console');
+    const explorer = document.getElementById('explorer-container');
+    const fileExplorer = document.getElementById('file-explorer');
+    const fileContent = document.getElementById('file-content');
+    const pluginInput = document.getElementById('pluginInput');
+    const commandInput = document.getElementById('command-input');
+    const sendCommandBtn = document.getElementById('send-command-btn');
+    let currentFilePath = null;
+
+    const socket = io();
+    socket.on('console', (msg) => {
+      consola.textContent += msg;
+      consola.scrollTop = consola.scrollHeight;
+    });
+
+    function showSection(section) {
+      document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+      if (section === 'console') {
+        consola.style.display = 'block';
+        explorer.style.display = 'none';
+        document.querySelectorAll('.nav-btn')[0].classList.add('active');
+      } else {
+        consola.style.display = 'none';
+        explorer.style.display = 'block';
+        document.querySelectorAll('.nav-btn')[1].classList.add('active');
+        cargarArchivos('');
+      }
+    }
+
+    async function enviarAccion(accion) {
+      try {
+        const res = await fetch(`/${accion}`, { method: 'POST' });
+        const data = await res.json();
+        consola.textContent += `\n[INFO] ${data.status || data.message}\n`;
+        consola.scrollTop = consola.scrollHeight;
+      } catch {
+        consola.textContent += `\n[ERROR] No se pudo contactar al servidor.\n`;
+      }
+    }
+
+    async function cargarArchivos(ruta) {
+      try {
+        const res = await fetch(`/files?path=${encodeURIComponent(ruta)}`);
+        const files = await res.json();
+        fileExplorer.innerHTML = '';
+        if (ruta) {
+          const up = ruta.split('/').slice(0, -1).join('/');
+          const upBtn = document.createElement('div');
+          upBtn.textContent = '⬆️ Subir nivel';
+          upBtn.className = 'folder';
+          upBtn.onclick = () => cargarArchivos(up);
+          fileExplorer.appendChild(upBtn);
+        }
+        files.forEach(f => {
+          const el = document.createElement('div');
+          el.textContent = f.name;
+          el.className = f.isDirectory ? 'folder' : 'file';
+          el.onclick = () => {
+            if (f.isDirectory) {
+              cargarArchivos(f.path);
+              fileContent.value = '';
+              currentFilePath = null;
+            } else {
+              cargarArchivo(f.path);
+            }
+          };
+          fileExplorer.appendChild(el);
+        });
+      } catch {
+        alert('Error al cargar archivos');
+      }
+    }
+
+    async function cargarArchivo(ruta) {
+      try {
+        const res = await fetch(`/file?path=${encodeURIComponent(ruta)}`);
+        const data = await res.json();
+        fileContent.value = data.content;
+        currentFilePath = ruta;
+      } catch {
+        alert('Error al cargar archivo');
+      }
+    }
+
+    async function guardarArchivo() {
+      if (!currentFilePath) return alert('Selecciona un archivo');
+      try {
+        const res = await fetch('/file', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ path: currentFilePath, content: fileContent.value })
+        });
+        const data = await res.json();
+        alert(res.ok ? 'Archivo guardado' : `Error: ${data.error}`);
+      } catch {
+        alert('Error al guardar');
+      }
+    }
+
+    pluginInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file.name.endsWith('.jar')) return alert('Solo .jar permitido');
+      const form = new FormData();
+      form.append('plugin', file);
+      const res = await fetch('/upload-plugin', { method: 'POST', body: form });
+      const data = await res.json();
+      alert(res.ok ? 'Plugin subido' : `Error: ${data.error}`);
+    });
+
+    // Función para enviar comando desde la consola web
+    function enviarComando() {
+      const cmd = commandInput.value.trim();
+      if (!cmd) return;
+
+      // Mostrar el comando en consola
+      consola.textContent += `\n> ${cmd}\n`;
+      consola.scrollTop = consola.scrollHeight;
+
+      // Enviar comando al servidor
+      fetch('/comando', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ comando: cmd })
+      })
+      .then(res => res.json())
+      .then(data => {
+        // Mostrar la respuesta en consola
+        if(data.respuesta){
+          consola.textContent += data.respuesta + '\n';
+        } else {
+          consola.textContent += '[Sin respuesta]\n';
+        }
+        consola.scrollTop = consola.scrollHeight;
+      })
+      .catch(() => {
+        consola.textContent += '[ERROR] No se pudo enviar el comando.\n';
+        consola.scrollTop = consola.scrollHeight;
+      });
+
+      commandInput.value = '';
+    }
+
+    sendCommandBtn.addEventListener('click', enviarComando);
+    commandInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        enviarComando();
+      }
+    });
+
+    showSection('console');
+  </script>
+</body>
+</html>
